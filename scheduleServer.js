@@ -14,6 +14,7 @@ app.engine('handlebars', handlebars.engine);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.set('view engine', 'handlebars');
+app.set('views', __dirname + '/views');
 app.set('port', 5047);
 app.use(express.static('public'));
 //var credentials = require('./credentials.js');
@@ -31,7 +32,6 @@ app.get('/', function(req, res, next) {
     //context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
 
     context.results = scheduleData.profiles[0].Schedule.tasks;
-
     res.render('home', context);
 }); 
 
@@ -39,9 +39,7 @@ app.post('/', function(req, res) {
   var context = {};
   if (req.body['Add Item']) {
     newTask = new dataDef.Task(req.body.name, req.body.date, req.body.time,
-    	req.body.address, req.body.city, req.body.state, req.body.recurring);
-
-    
+       req.body.address, req.body.city, req.body.state, req.body.recurring);   
     scheduleData.profiles[0].Schedule.tasks.push(newTask);
     context.results = scheduleData.profiles[0].Schedule.tasks;
     res.render('home', context);
@@ -69,11 +67,8 @@ app.put('/tasks/:id', function(req, res){
 	scheduleData.profiles[0].Schedule.tasks[id].Location.city = req.body.city;
 	scheduleData.profiles[0].Schedule.tasks[id].Location.state = req.body.state;
 
-
-    context.results = scheduleData.profiles[0].Schedule.tasks;
-    res.send(null);
-	
-
+  context.results = scheduleData.profiles[0].Schedule.tasks;
+  res.send(null);	
 });
 
 app.put('/delete/:id', function(req, res){
