@@ -1,0 +1,41 @@
+<h3>Adding Task</h3>
+
+<form method="post" action="/">
+  <fieldset>
+    <table>
+      <thead>
+        <th>Task Name</th>
+        <th>Task Date</th>
+        <th>Task Time</th>
+        <th>Task Address</th>
+        <th>Task City</th>
+        <th>Task State</th>
+        <th>Task Recurring? (1=yes 0=no)</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="text" name="name" id="newName"></td>
+          <td><input type="text" name="date" id="newDate"></td>
+          <td><input type="text" name="time" id="newTime"></td>
+          <td><input type="text" name="address" id="newAddress"></td>
+          <td><input type="text" name="city" id="newCity"></td>
+          <td><input type="text" name="state" id="newState"></td>
+          <td><input type="text" name="recurring" id="newRecurring"></td> 
+        </tr>
+      </tbody>
+    </table>
+    <div></div>
+    <input type="submit" name="Add Item" value="Add Task" id="AddButton">
+  </fieldset>
+</form>
+<br>
+<div>
+  {{results}}
+  {{#each results}}
+    <div>
+      {{name}}
+    </div>
+  {{/each}}
+</div>
+
+				
