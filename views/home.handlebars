@@ -29,13 +29,53 @@
   </fieldset>
 </form>
 <br>
-<div>
-  {{results}}
-  {{#each results}}
-    <div>
-      {{name}}
-    </div>
-  {{/each}}
-</div>
+<table>
+	<thead>
+		<th>Task Name</th>
+	</thead>
+	<tbody>
+	{{#each results}}
+	<tr> 
+	    <td>{{name}}</td> 
+            <td><button> Delete</button></td>
+            <td><button> Update </button></td>
+	</tr> 
+	{{/each}}
+	</tbody>
+</table>
 
-				
+
+<script src="deletetask.js" defer></script>
+<script>
+var buttons = document.getElementsByTagName('button');
+
+i = 0; 
+while (i < buttons.length){
+(function(i){
+	if (i % 2 == 0) {
+		buttons[i].addEventListener("click", function(event){	
+			id = i; 
+			id = id / 2; 
+			deleteTask(id); 
+		}); 
+	}
+
+	else{
+	buttons[i].addEventListener("click", function(event){
+		id = i; 
+		console.log(id);
+		if (id == 1) {
+			id = 0; 
+		}
+		else {
+			id = id / 2;	
+			id = Math.floor(id); 
+		}
+		document.location.href = "/update/" + id; 
+		}); 
+	}
+	})(i); 
+	i = i + 1; 
+	}
+
+</script>			
