@@ -39,7 +39,7 @@ app.post('/', function(req, res) {
   var context = {};
   if (req.body['Add Item']) {
     newTask = new dataDef.Task(req.body.name, req.body.date, req.body.time,
-    	req.body.address, req.body.city, req.body.state, req.body.recurring);   
+       req.body.address, req.body.city, req.body.state, req.body.recurring);   
     scheduleData.profiles[0].Schedule.tasks.push(newTask);
     context.results = scheduleData.profiles[0].Schedule.tasks;
     res.render('home', context);
