@@ -48,4 +48,10 @@ function bindMapButton() {
     event.preventDefault();
   });
 
+  var calButton = document.getElementById('CalendarView'); 
+  calButton.addEventListener('click', function(event) {
+    window.location.href = '/calendarview';
+    event.preventDefault(); 
+  }); 
+
 }
