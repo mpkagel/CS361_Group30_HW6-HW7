@@ -1,0 +1,26 @@
+<h1>Update Profile:</h1>
+<form id="update-profile">
+    Name: <input type="text" name="name" value="{{name}}"><br>
+    Phone number: <input type="text" name="phone" value="{{phoneNum}}"><br>
+    Home address: <input type="text" name="addressH" value="{{homeLocation.addressH}}"><br>
+    Home state: <input type="text" name="stateH" value="{{homeLocation.stateH}}/"><br>
+    Home city: <input type="text" name="cityH" value="{{homeLocation.cityH}}"><br>
+    Work address: <input type="text" name="addressW" value="{{workLocation.addressW}}"><br>
+    Work state: <input type="text" name="stateW" value="{{workLocation.stateW}}"><br>
+    Work city: <input type="text" name="cityW" value="{{workLocation.cityW}}"><br>
+    Email: <input type="text" name="email" value="{{email}}"><br>
+
+</form>
+<button onclick="updateProfile()">Update</button>
+
+<script>
+function updateProfile(){
+    $.ajax({
+        url: '/profiles',
+        type: 'PUT',
+        data: $('#update-profile').serialize(),
+        success: function(result){
+		window.location.href = '/';
+        }
+    })}
+</script>

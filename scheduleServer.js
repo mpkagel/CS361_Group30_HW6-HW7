@@ -17,7 +17,7 @@ app.set('view engine', 'handlebars');
 app.set('views', __dirname + '/views');
 app.set('port', 5047);
 app.use(express.static('public'));
-var credentials = require('./credentials.js');
+//var credentials = require('./credentials.js');
 var dataDef = require('./dataDefinition.js');
 var testData = require('./testDataCreation.js')
 
@@ -46,8 +46,6 @@ app.post('/', function(req, res) {
 
   }
 });
-
-
 
 function CoordinateFormatAddress(task) {
 	addressUnf = task.Location;
@@ -110,8 +108,6 @@ app.get('/mapview', function(req, res, next) {
 
 }); 
 
-
-
 app.get('/update/:id', function(req, res){
 	callbackCount = 0;
 	var context = {};
@@ -134,6 +130,28 @@ app.put('/tasks/:id', function(req, res){
 
   context.results = scheduleData.profiles[0].Schedule.tasks;
   res.send(null);	
+});
+
+app.get('/updateprofile', function(req, res){
+        callbackCount = 0;
+        var context = {};
+        context = scheduleData.profiles[0]
+        res.render('update-profile', context);
+});
+
+app.put('/profiles', function(req, res){
+        var context = {};
+        scheduleData.profiles[0].name = req.body.name;
+        scheduleData.profiles[0].phoneNum = req.body.phone;
+        scheduleData.profiles[0].homeLocation.addressH = req.body.addressH;
+        scheduleData.profiles[0].homeLocation.cityH = req.body.cityH;
+        scheduleData.profiles[0].homeLocation.stateH = req.body.stateH;
+        scheduleData.profiles[0].workLocation.addressW = req.body.addressW;
+	scheduleData.profiles[0].workLocation.cityW = req.body.cityW;
+	scheduleData.profiles[0].workLocation.stateW = req.body.stateW;
+	scheduleData.profiles[0].email = req.body.email;	
+  context.results = scheduleData.profiles[0];
+  res.send(null);
 });
 
 app.put('/delete/:id', function(req, res){
