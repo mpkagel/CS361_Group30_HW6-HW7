@@ -1,0 +1,23 @@
+<h1>Update {{name}}:</h1>
+<form id="update-profile">
+    Task name: <input type="text" name="name" value="{{name}}"><br>
+    Task date: <input type="text" name="date" value="{{date}}"><br>
+    Task time: <input type="text" name="time" value="{{time}}"><br>
+    Task address: <input type="text" name="address" value="{{Location.address}}/"><br>
+    Task city: <input type="text" name="city" value="{{Location.city}}"><br>
+    Task state: <input type="text" name="state" value="{{Location.state}}"><br>
+    Task recurring (1=yes 0=no): <input type="text" name="recurring" value="{{recurring}}"><br>
+</form>
+<button onclick="updateTask({{id}})">Update</button>
+
+<script>
+function updateTask(id){
+    $.ajax({
+        url: '/tasks/' + id,
+        type: 'PUT',
+        data: $('#update-task').serialize(),
+        success: function(result){
+		window.location.href = '/';
+        }
+    })}
+</script>
