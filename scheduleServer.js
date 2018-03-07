@@ -14,6 +14,7 @@ app.engine('handlebars', handlebars.engine);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.set('view engine', 'handlebars');
+app.set('views', __dirname + '/views');
 app.set('port', 5047);
 app.use(express.static('public'));
 var credentials = require('./credentials.js');
@@ -31,7 +32,6 @@ app.get('/', function(req, res, next) {
     //context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
 
     context.results = scheduleData.profiles[0].Schedule.tasks;
-
     res.render('home', context);
 }); 
 
@@ -39,12 +39,115 @@ app.post('/', function(req, res) {
   var context = {};
   if (req.body['Add Item']) {
     newTask = new dataDef.Task(req.body.name, req.body.date, req.body.time,
-    	req.body.address, req.body.city, req.body.state, req.body.recurring);
-  
+       req.body.address, req.body.city, req.body.state, req.body.recurring);   
     scheduleData.profiles[0].Schedule.tasks.push(newTask);
+    context.results = scheduleData.profiles[0].Schedule.tasks;
+    res.render('home', context);
 
   }
 });
+
+
+
+function CoordinateFormatAddress(task) {
+	addressUnf = task.Location;
+	addressForm = task.Location.address.split(" ").join("+");
+	addressForm += ",+" + task.Location.city.split(" ").join("+");
+	addressForm += ",+" + task.Location.state.split(" ").join("+");
+	return addressForm;
+}
+
+function GetCoords(res, context, complete) {
+	var addresses = [];
+	var lats = [];
+	var lngs = [];
+
+	scheduleData.profiles[0].Schedule.tasks.forEach( function(e) {
+ 		addresses.push(CoordinateFormatAddress(e));
+	});    
+
+
+	addresses.forEach( function(e, i) {
+	  	request('https://maps.googleapis.com/maps/api/geocode/json?address=' +
+	    	e + '&key=' + credentials.mapKey, function(err, response, body) {
+	    	if (!err && response.statusCode < 400) {
+	      		var bodyParsed = JSON.parse(body);
+	      		lats[i] = bodyParsed.results[0].geometry.location.lat;
+	      		lngs[i] = bodyParsed.results[0].geometry.location.lng;
+	      		requestComplete();
+	    	} else {
+	      		console.log(err);
+	      		if (response) {
+	      			console.log(response.statusCode);
+	      		}
+	    	}
+	  	}); 
+	});
+
+  	requestCount = 0;
+  	function requestComplete() {
+  		requestCount++;
+  		if (requestCount == addresses.length) {
+  			context.lats = lats;
+  			context.lngs = lngs;
+  			complete();
+  		}
+  	};
+}
+
+app.get('/mapview', function(req, res, next) {
+  	var context = {};
+    //context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
+
+	GetCoords(res, context, complete);
+    context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
+
+    function complete() {
+      	context.layout = 'mapLayout';
+    	context.tasks = scheduleData.profiles[0].Schedule.tasks;
+      	res.render('mapview', context);
+    }    
+
+}); 
+
+
+
+app.get('/update/:id', function(req, res){
+	callbackCount = 0;
+	var context = {};
+	context.jsscripts = ["updatetask.js"];
+	console.log(req.params.id);
+	id = req.params.id; 
+	context = scheduleData.profiles[0].Schedule.tasks[id]; 
+	context.id = id; 
+	res.render('update-task', context);
+});
+
+app.put('/tasks/:id', function(req, res){
+	var context = {};
+	scheduleData.profiles[0].Schedule.tasks[id].name = req.body.name;
+	scheduleData.profiles[0].Schedule.tasks[id].date = req.body.date;
+	scheduleData.profiles[0].Schedule.tasks[id].time = req.body.time;
+	scheduleData.profiles[0].Schedule.tasks[id].Location.address = req.body.address;
+	scheduleData.profiles[0].Schedule.tasks[id].Location.city = req.body.city;
+	scheduleData.profiles[0].Schedule.tasks[id].Location.state = req.body.state;
+
+  context.results = scheduleData.profiles[0].Schedule.tasks;
+  res.send(null);	
+});
+
+app.put('/delete/:id', function(req, res){
+
+	id = req.params.id;
+	callbackCount = 0;
+	var context = {};
+	scheduleData.profiles[0].Schedule.tasks.splice(id, 1); 
+	context = scheduleData.profiles[0].Schedule.tasks[id]; 
+	context.id = req.params.id; 
+	res.send(null); 
+});
+
+
 
 app.use(function(req,res) {
   	res.status(404);

@@ -29,13 +29,22 @@
   </fieldset>
 </form>
 <br>
-<div>
-  {{results}}
-  {{#each results}}
-    <div>
-      {{name}}
-    </div>
-  {{/each}}
-</div>
+<table>
+	<thead>
+		<th>Task Name</th>
+	</thead>
+	<tbody>
+	{{#each results}}
+	<tr> 
+	    <td>{{name}}</td> 
+            <td><button class=TaskModButton> Delete</button></td>
+            <td><button class=TaskModButton> Update</button></td>
+	</tr> 
+	{{/each}}
+	</tbody>
+</table>
+<br>
+<button type="button" id=MapView> Schedule Map View </button>
 
-				
+<script src="/scripts/deletetask.js" defer></script>
+		
