@@ -24,7 +24,7 @@ module.exports.Schedule = function( tasks ) {
   this.optimizScore = 0;
   this.owner = 0;
   this.tasks = tasks;
-
+  this.taskIdStart = 50;
 }
 
 module.exports.Task = function( name, date, time, address, city, state, recurring ) {

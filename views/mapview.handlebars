@@ -1,0 +1,54 @@
+<h3>Schedule Map View</h3>
+<div id="map"></div>
+
+<script>
+function initMap() {
+	var lats = [];
+	var lngs = [];
+	var taskNames = [];
+
+  	{{#each lats}}
+  		lats[{{@index}}] = {{this}};
+	{{/each}}
+	{{#each lngs}}
+  		lngs[{{@index}}] = {{this}};
+	{{/each}}
+	{{#each tasks}}
+		taskNames[{{@index}}] = "{{name}}"
+	{{/each}}	
+
+	var uluru = {lat: lats[0], lng: lngs[0]};
+	var map = new google.maps.Map(document.getElementById('map'), {
+	    zoom: 11,
+	    center: uluru
+	});
+	
+	var imported = document.createElement('script');
+	imported.src = '/scripts/gmaps-markerwithlabel-1.9.1.js'
+	document.head.appendChild(imported);
+
+	imported.onload = function() {
+		var i, marker;
+		for (i = 0; i < lats.length; i++) {
+			var marker = new MarkerWithLabel({
+		    	position: {lat: lats[i], lng: lngs[i]},
+		    	map: map,
+		    	icon: '/icons/blue-dot.png',
+		    	title: taskNames[i],
+		    	labelContent: taskNames[i],
+		    	labelClass: 'my-custom-class-for-label'	
+		    	
+			});
+		}
+	}
+}
+</script>
+<script async defer
+src="{{maprequest}}">
+</script>
+
+
+
+
+
+

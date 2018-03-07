@@ -47,6 +47,67 @@ app.post('/', function(req, res) {
   }
 });
 
+function CoordinateFormatAddress(task) {
+	addressUnf = task.Location;
+	addressForm = task.Location.address.split(" ").join("+");
+	addressForm += ",+" + task.Location.city.split(" ").join("+");
+	addressForm += ",+" + task.Location.state.split(" ").join("+");
+	return addressForm;
+}
+
+function GetCoords(res, context, complete) {
+	var addresses = [];
+	var lats = [];
+	var lngs = [];
+
+	scheduleData.profiles[0].Schedule.tasks.forEach( function(e) {
+ 		addresses.push(CoordinateFormatAddress(e));
+	});    
+
+
+	addresses.forEach( function(e, i) {
+	  	request('https://maps.googleapis.com/maps/api/geocode/json?address=' +
+	    	e + '&key=' + credentials.mapKey, function(err, response, body) {
+	    	if (!err && response.statusCode < 400) {
+	      		var bodyParsed = JSON.parse(body);
+	      		lats[i] = bodyParsed.results[0].geometry.location.lat;
+	      		lngs[i] = bodyParsed.results[0].geometry.location.lng;
+	      		requestComplete();
+	    	} else {
+	      		console.log(err);
+	      		if (response) {
+	      			console.log(response.statusCode);
+	      		}
+	    	}
+	  	}); 
+	});
+
+  	requestCount = 0;
+  	function requestComplete() {
+  		requestCount++;
+  		if (requestCount == addresses.length) {
+  			context.lats = lats;
+  			context.lngs = lngs;
+  			complete();
+  		}
+  	};
+}
+
+app.get('/mapview', function(req, res, next) {
+  	var context = {};
+    //context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
+
+	GetCoords(res, context, complete);
+    context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
+
+    function complete() {
+      	context.layout = 'mapLayout';
+    	context.tasks = scheduleData.profiles[0].Schedule.tasks;
+      	res.render('mapview', context);
+    }    
+
+}); 
+
 app.get('/update/:id', function(req, res){
 	callbackCount = 0;
 	var context = {};
@@ -92,8 +153,6 @@ app.put('/profiles', function(req, res){
   context.results = scheduleData.profiles[0];
   res.send(null);
 });
-
-
 
 app.put('/delete/:id', function(req, res){
 
