@@ -112,7 +112,6 @@ app.get('/update/:id', function(req, res){
 	callbackCount = 0;
 	var context = {};
 	context.jsscripts = ["updatetask.js"];
-	console.log(req.params.id);
 	id = req.params.id; 
 	context = scheduleData.profiles[0].Schedule.tasks[id]; 
 	context.id = id; 
@@ -165,6 +164,21 @@ app.put('/delete/:id', function(req, res){
 	res.send(null); 
 });
 
+
+app.get('/calendarview', function(req, res){
+        callbackCount = 0;
+        var context = {};
+        context = scheduleData.profiles[0]
+        res.render('calendarview', context);
+});
+
+app.post('/calendarview', function(req, res){
+        callbackCount = 0;
+        var context = {};
+    	context.tasks = scheduleData.profiles[0].Schedule.tasks;
+	context.month = req.body.month; 
+	res.send(context); 
+});
 
 
 app.use(function(req,res) {
