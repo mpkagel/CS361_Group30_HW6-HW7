@@ -142,16 +142,17 @@ app.put('/profiles', function(req, res){
         var context = {};
         scheduleData.profiles[0].name = req.body.name;
         scheduleData.profiles[0].phoneNum = req.body.phone;
-        scheduleData.profiles[0].homeLocation.addressH = req.body.addressH;
-        scheduleData.profiles[0].homeLocation.cityH = req.body.cityH;
-        scheduleData.profiles[0].homeLocation.stateH = req.body.stateH;
-        scheduleData.profiles[0].workLocation.addressW = req.body.addressW;
-	scheduleData.profiles[0].workLocation.cityW = req.body.cityW;
-	scheduleData.profiles[0].workLocation.stateW = req.body.stateW;
-	scheduleData.profiles[0].email = req.body.email;	
+        scheduleData.profiles[0].homeLocation.address = req.body.addressH;
+        scheduleData.profiles[0].homeLocation.city = req.body.cityH;
+        scheduleData.profiles[0].homeLocation.state = req.body.stateH;
+        scheduleData.profiles[0].workLocation.address = req.body.addressW;
+        scheduleData.profiles[0].workLocation.city = req.body.cityW;
+        scheduleData.profiles[0].workLocation.state = req.body.stateW;
+        scheduleData.profiles[0].email = req.body.email;
   context.results = scheduleData.profiles[0];
   res.send(null);
 });
+
 
 app.put('/delete/:id', function(req, res){
 
