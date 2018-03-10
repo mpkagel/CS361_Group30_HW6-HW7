@@ -6,12 +6,15 @@ module.exports.Location = function( address, city, state ) {
 
 }
 
-module.exports.Profile = function( name, pword, tasks ) {  
+module.exports.Profile = function( name, pword, tasks, phone, addressH, cityH, stateH, addressW, cityW, stateW, email ) {  
   var dataDef = require('./dataDefinition.js');
   this.name = name;
   this.pword = pword; 
-  this.phoneNum = null;
-  this.Schedule = new dataDef.Schedule( tasks );
+  this.phoneNum = phone;
+  this.homeLocation = new dataDef.Location(addressH, cityH, stateH);
+  this.workLocation = new dataDef.Location( addressW, cityW, stateW);
+  this.email = email;
+  this.Schedule = new dataDef.Schedule(tasks);
 
 }
 
@@ -21,7 +24,6 @@ module.exports.Schedule = function( tasks ) {
   this.optimizScore = 0;
   this.owner = 0;
   this.tasks = tasks;
-  this.taskIdStart = 50;
 }
 
 module.exports.Task = function( name, date, time, address, city, state, recurring ) {

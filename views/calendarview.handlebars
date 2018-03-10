@@ -1,0 +1,251 @@
+<html>
+
+<body>
+Calendar View
+
+<form id="chooseMonth">
+<fieldset id="myFieldset">
+Month: <select name="month" id="changemonth">
+	<option disabled selected value> -- select an option -- </option>
+	<option value="0">January</option>
+	<option value="1">February</option>
+	<option value="2">March</option>
+	<option value="3">April</option>
+	<option value="4">May</option>
+	<option value="5">June</option>
+	<option value="6">July</option>
+	<option value="7">August</option>
+	<option value="8">September</option>
+	<option value="9">October</option>
+	<option value="10">November</option>
+	<option value="11">December</option>
+	</select>
+<input type="submit" value="Submit" id="mySubmit">
+</fieldset>
+</form><br>
+
+<div id="myDiv">
+	<table class="calendar">
+		<thead>
+			<tr>
+				<th>Sun</th>
+				<th>Mon</th>
+				<th>Tue</th>
+				<th>Wed</th>
+				<th>Thu</th>
+				<th>Fri</th>
+				<th>Sat</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+			</tr>
+			<tr>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+			</tr>
+			<tr>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+			</tr>
+			<tr>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+			</tr>
+			<tr>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+			</tr>
+			<tr>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+				<td><div class="date"></div><div class="task"></div></td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+<div id="spacer"></div>
+<button onclick="window.location.href='/listview'" id="prof"> List View </button>
+
+
+</body>
+</html>
+<script>
+
+var jan = [1, 31, 3];
+var feb = [4, 28, 3];
+var mar = [4, 31, 6];
+var apr = [0, 30, 1];
+var may = [2, 31, 4];
+var jun = [5, 30, 6];
+var jul = [0, 31, 2];
+var aug = [3, 31, 5]; 
+var sep = [6, 30, 0];
+var oct = [1, 31, 3];
+var nov = [4, 30, 5]; 
+var dec = [6, 31, 1]; 
+
+var months = [jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec]; 
+
+var chooseMonth = document.getElementById("chooseMonth"); 
+chooseMonth.addEventListener("submit", function(event) {
+
+	var req = new XMLHttpRequest(); 
+
+	req.open('POST', "/calendarview", true); 
+	req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); 
+	req.addEventListener('load', function() {
+		if (req.status >= 200 && req.status < 400) {
+			var response = JSON.parse(req.responseText); 
+			setCalendar(response.month); 
+			addEvents(response.tasks, response.month); 
+			
+
+		}
+		else {
+			console.log("Error in request"); 
+		} 
+	});
+	var month = document.getElementById("changemonth").value; 
+	var postdata = "month=" + month
+	req.send(postdata); 
+	event.preventDefault(); 
+
+});
+
+function setCalendar(month){
+	
+	tds = document.getElementsByTagName("td"); 
+
+	i = months[month][0]; 
+	j = 1;
+	k = 0; 
+	while (k < i) {
+		tds[k].firstChild.innerHTML = "";
+		k = k + 1; 
+	}
+
+	while (i < months[month][1] + months[month][0]){
+		tds[i].firstChild.innerHTML = j;
+		j = j + 1; 
+		i = i + 1; 
+	}
+
+
+	while (i < tds.length) {
+		tds[i].firstChild.innerHTML = "";
+		i = i + 1;
+	}
+
+}
+
+function addEvents(tasks, month) {
+
+	i = 0; 
+	tds = document.getElementsByTagName("td");			
+	while (i < tasks.length) {
+		var d = new Date(tasks[i].date);
+
+		if (d.getMonth() == month && d.getYear() != 70) {
+			date = d.getDate(); 
+			start = months[month][0]; 
+			var td = tds[start + date - 1].firstChild;
+			
+			if (td.childNodes.length == 1) {	
+				var ul = document.createElement("ul");
+				td.appendChild(ul); 
+			}
+			
+			var li = document.createElement("li"); 
+			var a = document.createElement("a"); 
+			a.textContent = tasks[i].name; 
+			a.setAttribute('href', "/update/" + i); 
+			li.appendChild(a); 
+			
+			var ul = td.lastChild; 
+
+			ul.appendChild(li); 						
+
+		}
+		 
+		i = i + 1; 
+	}
+	
+
+}
+
+</script>
+
+
+<style type='text/css'>
+
+table.calendar {
+	border-collapse: collapse;
+	width: 80%;
+	border: 1px solid black; 
+	table-layout: fixed; 
+}
+
+td, th {
+	border: 1px solid black; 
+}
+
+body {
+	border: 0; 
+}
+
+td {
+	width: 50px;
+	height: 50px; 
+}
+
+
+.date {
+	text-align: right;
+	height: 90%; 		
+}
+
+
+li {
+	text-align: left; 
+}
+
+
+#spacer {
+  height: 15px;
+}
+
+</style>
+
