@@ -2,7 +2,7 @@
 
 <form method="post" action="/">
   <fieldset>
-    <table>
+    <table class="addTask">
       <thead>
         <th>Task Name</th>
         <th>Task Date</th>
@@ -29,14 +29,26 @@
   </fieldset>
 </form>
 <br>
-<table>
+<table class="displayTasks">
 	<thead>
 		<th>Task Name</th>
+		<th>Date</th>
+		<th>Time</th>
+		<th>Address</th>
+		<th>City</th>
+		<th>State</th>
+		<th>Recurring</th>
 	</thead>
 	<tbody>
 	{{#each results}}
 	<tr> 
 	    <td>{{name}}</td> 
+	    <td>{{date}}</td>
+	    <td>{{time}}</td> 
+	    <td>{{Location.address}}</td> 
+	    <td>{{Location.city}}</td> 
+	    <td>{{Location.state}}</td>
+	    <td>{{recurring}}</td>  
       <td><button class=TaskModButton> Delete</button></td>
       <td><button class=TaskModButton> Update</button></td>
 	</tr> 
