@@ -5,6 +5,8 @@
 ** Description: This is the javascript file that ????????????
 *************************************************************/
 var express = require('express');
+var session = require("express-session");
+var fs = require("fs"); //write file
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var bodyParser = require('body-parser');
@@ -15,7 +17,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.set('view engine', 'handlebars');
 app.set('views', __dirname + '/views');
-app.set('port', 5047);
+app.set('port', 61431);
 app.use(express.static('public'));
 //var credentials = require('./credentials.js');
 var dataDef = require('./dataDefinition.js');
@@ -26,20 +28,69 @@ var scheduleData = [];
 
 scheduleData = testData.CreateTestData();
 //testData.PrintTestData(scheduleData);
+/* Homepage handling*/
 
-app.get('/', function(req, res, next) {
+//for login
+
+app.use(session({
+  secret: "thisisapassword1",
+  resave: false,
+  saveUninitialized: false
+          }));;
+session.loggedIn = 0;
+
+const path = require('path');
+
+
+app.get('/',function(req,res){
+  console.log("in home.js get");
+  var context = {};
+  res.render('login', context);
+ });
+
+
+//Post login info, if matches test login, redirect to /newQuote
+app.post('/',function(req,res){
+  var params = [];
+  var context = {};
+
+  for (var p in req.body){
+    params.push({'name':p,'value':req.body[p]})
+  }
+  context.dataList = params;
+
+  if(params[0].name=="username" && params[0].value=="employeeTest"){
+    if(params[1].name=="password" && params[1].value=="testpassword"){
+      session.loggedIn = 1;
+      res.redirect("/add");
+    }
+  } else {
+    res.render('loginError', context); //render error page if unsuccessful login
+  }
+});
+
+
+app.get("/logOut", function(req, res){
+  if (session.loggedIn) {
+    session.loggedIn = 0;
+  }
+  res.redirect("/");
+});
+
+//Add scheduled task
+app.get('/add', function(req, res, next) {
   	var context = {};
     //context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
 
     context.results = scheduleData.profiles[0].Schedule.tasks;
     res.render('home', context);
-}); 
+});
 
-app.post('/', function(req, res) {
+app.post('/add', function(req, res) {
   var context = {};
   if (req.body['Add Item']) {
     newTask = new dataDef.Task(req.body.name, req.body.date, req.body.time,
-       req.body.address, req.body.city, req.body.state, req.body.recurring);   
+       req.body.address, req.body.city, req.body.state, req.body.recurring);
     scheduleData.profiles[0].Schedule.tasks.push(newTask);
     context.results = scheduleData.profiles[0].Schedule.tasks;
     res.render('home', context);
@@ -62,7 +113,7 @@ function GetCoords(res, context, complete) {
 
 	scheduleData.profiles[0].Schedule.tasks.forEach( function(e) {
  		addresses.push(CoordinateFormatAddress(e));
-	});    
+	});
 
 
 	addresses.forEach( function(e, i) {
@@ -79,7 +130,7 @@ function GetCoords(res, context, complete) {
 	      			console.log(response.statusCode);
 	      		}
 	    	}
-	  	}); 
+	  	});
 	});
 
   	requestCount = 0;
@@ -104,17 +155,17 @@ app.get('/mapview', function(req, res, next) {
       	context.layout = 'mapLayout';
     	context.tasks = scheduleData.profiles[0].Schedule.tasks;
       	res.render('mapview', context);
-    }    
+    }
 
-}); 
+});
 
 app.get('/update/:id', function(req, res){
 	callbackCount = 0;
 	var context = {};
 	context.jsscripts = ["updatetask.js"];
-	id = req.params.id; 
-	context = scheduleData.profiles[0].Schedule.tasks[id]; 
-	context.id = id; 
+	id = req.params.id;
+	context = scheduleData.profiles[0].Schedule.tasks[id];
+	context.id = id;
 	res.render('update-task', context);
 });
 
@@ -128,7 +179,7 @@ app.put('/tasks/:id', function(req, res){
 	scheduleData.profiles[0].Schedule.tasks[id].Location.state = req.body.state;
 
   context.results = scheduleData.profiles[0].Schedule.tasks;
-  res.send(null);	
+  res.send(null);
 });
 
 app.get('/updateprofile', function(req, res){
@@ -136,6 +187,13 @@ app.get('/updateprofile', function(req, res){
         var context = {};
         context = scheduleData.profiles[0]
         res.render('update-profile', context);
+});
+
+app.get('/signup', function(req, res){
+        callbackCount = 0;
+        var context = {};
+        context = {};
+        res.render('create-profile', context);
 });
 
 app.put('/profiles', function(req, res){
@@ -158,10 +216,10 @@ app.put('/delete/:id', function(req, res){
 	id = req.params.id;
 	callbackCount = 0;
 	var context = {};
-	scheduleData.profiles[0].Schedule.tasks.splice(id, 1); 
-	context.results = scheduleData.profiles[0].Schedule.tasks[id]; 
+	scheduleData.profiles[0].Schedule.tasks.splice(id, 1);
+	context.results = scheduleData.profiles[0].Schedule.tasks[id];
 	context.id = req.params.id;
-	res.send(null); 
+	res.send(null);
 });
 
 
@@ -176,8 +234,8 @@ app.post('/calendarview', function(req, res){
         callbackCount = 0;
         var context = {};
     	context.tasks = scheduleData.profiles[0].Schedule.tasks;
-	context.month = req.body.month; 
-	res.send(context); 
+	context.month = req.body.month;
+	res.send(context);
 });
 
 
