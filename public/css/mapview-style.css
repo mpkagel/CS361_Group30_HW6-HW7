@@ -16,5 +16,8 @@
   font-weight: bold;
   font-size: 10px;
   color: black;
+}
 
+#spacer {
+  height: 15px;
 }

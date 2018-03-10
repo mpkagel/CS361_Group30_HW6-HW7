@@ -1,6 +1,6 @@
 <h3>Adding Task</h3>
 
-<form method="post" action="/">
+<form id=add-task>
   <fieldset>
     <table>
       <thead>
@@ -25,9 +25,22 @@
       </tbody>
     </table>
     <div></div>
-    <input type="submit" name="Add Item" value="Add Task" id="AddButton">
+    <button onclick="addItem()">Add Task</button>
   </fieldset>
 </form>
+
+<script>
+  function addItem(){
+      $.ajax({
+          url: '/listview',
+          type: 'PUT',
+          data: $('#add-task').serialize(),
+          success: function(result){
+            window.location.href = '/listview';
+          }
+      })}
+</script>
+
 <br>
 <table>
 	<thead>
@@ -37,14 +50,22 @@
 	{{#each results}}
 	<tr> 
 	    <td>{{name}}</td> 
-            <td><button class=TaskModButton> Delete</button></td>
-            <td><button class=TaskModButton> Update</button></td>
+      <td><button class=TaskModButton> Delete</button></td>
+      <td><button class=TaskModButton> Update</button></td>
 	</tr> 
 	{{/each}}
 	</tbody>
 </table>
-<br>
+
+<div id="spacer"></div>
+<button onclick="window.location.href='/updateprofile'" id="prof"> Update Profile </button>
+
+<div id="spacer"></div>
 <button type="button" id=MapView> Schedule Map View </button>
+<button type="button" id=CalendarView> Schedule Calendar View </button>
+
+<div id="spacer"></div>
+<button type="button" id=LogOut> Logout </button>
 
 <script src="/scripts/deletetask.js" defer></script>
 		

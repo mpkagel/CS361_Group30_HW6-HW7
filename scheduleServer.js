@@ -9,6 +9,7 @@ var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var bodyParser = require('body-parser');
 var request = require('request');
+var session = require('express-session');
 
 app.engine('handlebars', handlebars.engine);
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -17,9 +18,16 @@ app.set('view engine', 'handlebars');
 app.set('views', __dirname + '/views');
 app.set('port', 5047);
 app.use(express.static('public'));
+app.use(session({
+  secret: 'nosecrets',
+  resave: false,
+  saveUninitialized: true
+}));
+session.loggedIn = 0;
+
 var credentials = require('./credentials.js');
 var dataDef = require('./dataDefinition.js');
-var testData = require('./testDataCreation.js')
+var testData = require('./testDataCreation.js');
 
 // Starting program
 var scheduleData = [];
@@ -27,27 +35,55 @@ var scheduleData = [];
 scheduleData = testData.CreateTestData();
 //testData.PrintTestData(scheduleData);
 
-app.get('/', function(req, res, next) {
-  	var context = {};
-    //context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
-
-    context.results = scheduleData.profiles[0].Schedule.tasks;
-    res.render('home', context);
-}); 
-
-app.post('/', function(req, res) {
+/* Homepage handling*/
+app.get('/',function(req,res) {
   var context = {};
-  if (req.body['Add Item']) {
-    newTask = new dataDef.Task(req.body.name, req.body.date, req.body.time,
-       req.body.address, req.body.city, req.body.state, req.body.recurring);   
-    scheduleData.profiles[0].Schedule.tasks.push(newTask);
-    context.results = scheduleData.profiles[0].Schedule.tasks;
-    res.render('home', context);
+  res.render('loginHome', context);
+ });
 
+//Post login info, if matches test login, redirect to /newQuote
+app.post('/',function(req,res) {
+  var params = [];
+  var context = {};
+
+  for (var p in req.body){
+    params.push({'name':p,'value':req.body[p]})
+  }
+  context.dataList = params;
+
+  if(params[0].name=="username" && params[0].value=="employeeTest"){
+    if(params[1].name=="password" && params[1].value=="testpassword"){
+      session.loggedIn = 1;
+      res.redirect("/listview");
+    }
+  } else {
+    res.render('loginError', context); //render error page if unsuccessful login
   }
 });
 
+app.get("/logOut", function(req, res) {
+  if (session.loggedIn) {
+    session.loggedIn = 0;
+  }
+  res.redirect("/");
+});
 
+app.get('/listview', function(req, res, next) {
+  	var context = {};
+
+    context.results = scheduleData.profiles[0].Schedule.tasks;
+    context.layout = 'listLayout';
+    res.render('listview', context);
+}); 
+
+app.put('/listview', function(req, res){
+  var context = {};
+
+  newTask = new dataDef.Task(req.body.name, req.body.date, req.body.time,
+      req.body.address, req.body.city, req.body.state, req.body.recurring);   
+  scheduleData.profiles[0].Schedule.tasks.push(newTask);
+  res.send(null);
+});
 
 function CoordinateFormatAddress(task) {
 	addressUnf = task.Location;
@@ -66,7 +102,6 @@ function GetCoords(res, context, complete) {
  		addresses.push(CoordinateFormatAddress(e));
 	});    
 
-
 	addresses.forEach( function(e, i) {
 	  	request('https://maps.googleapis.com/maps/api/geocode/json?address=' +
 	    	e + '&key=' + credentials.mapKey, function(err, response, body) {
@@ -84,42 +119,40 @@ function GetCoords(res, context, complete) {
 	  	}); 
 	});
 
-  	requestCount = 0;
-  	function requestComplete() {
-  		requestCount++;
-  		if (requestCount == addresses.length) {
-  			context.lats = lats;
-  			context.lngs = lngs;
-  			complete();
-  		}
-  	};
+	requestCount = 0;
+	function requestComplete() {
+		requestCount++;
+		if (requestCount == addresses.length) {
+			context.lats = lats;
+			context.lngs = lngs;
+			complete();
+		}
+	};
 }
 
 app.get('/mapview', function(req, res, next) {
   	var context = {};
     //context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
 
-	GetCoords(res, context, complete);
+	  GetCoords(res, context, complete);
     context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
 
     function complete() {
       	context.layout = 'mapLayout';
-    	context.tasks = scheduleData.profiles[0].Schedule.tasks;
+    	  context.tasks = scheduleData.profiles[0].Schedule.tasks;
       	res.render('mapview', context);
     }    
 
 }); 
 
-
-
 app.get('/update/:id', function(req, res){
 	callbackCount = 0;
 	var context = {};
 	context.jsscripts = ["updatetask.js"];
-	console.log(req.params.id);
 	id = req.params.id; 
 	context = scheduleData.profiles[0].Schedule.tasks[id]; 
-	context.id = id; 
+	context.id = id;
+  context.layout = 'updateTaskLayout'; 
 	res.render('update-task', context);
 });
 
@@ -136,6 +169,29 @@ app.put('/tasks/:id', function(req, res){
   res.send(null);	
 });
 
+app.get('/updateprofile', function(req, res){
+        callbackCount = 0;
+        var context = {};
+        context = scheduleData.profiles[0];
+        context.layout = 'updateProfileLayout';
+        res.render('update-profile', context);
+});
+
+app.put('/profiles', function(req, res){
+        var context = {};
+        scheduleData.profiles[0].name = req.body.name;
+        scheduleData.profiles[0].phoneNum = req.body.phone;
+        scheduleData.profiles[0].homeLocation.address = req.body.addressH;
+        scheduleData.profiles[0].homeLocation.city = req.body.cityH;
+        scheduleData.profiles[0].homeLocation.state = req.body.stateH;
+        scheduleData.profiles[0].workLocation.address = req.body.addressW;
+        scheduleData.profiles[0].workLocation.city = req.body.cityW;
+        scheduleData.profiles[0].workLocation.state = req.body.stateW;
+        scheduleData.profiles[0].email = req.body.email;
+  context.results = scheduleData.profiles[0];
+  res.send(null);
+});
+
 app.put('/delete/:id', function(req, res){
 
 	id = req.params.id;
@@ -147,7 +203,20 @@ app.put('/delete/:id', function(req, res){
 	res.send(null); 
 });
 
+app.get('/calendarview', function(req, res){
+        callbackCount = 0;
+        var context = {};
+        context = scheduleData.profiles[0]
+        res.render('calendarview', context);
+});
 
+app.post('/calendarview', function(req, res){
+        callbackCount = 0;
+        var context = {};
+    	context.tasks = scheduleData.profiles[0].Schedule.tasks;
+	context.month = req.body.month; 
+	res.send(context); 
+});
 
 app.use(function(req,res) {
   	res.status(404);

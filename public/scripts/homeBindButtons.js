@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
 	bindUpdDel();  
-	bindMapButton();
+	bindMapCalButton();
+	bindLogoutButton();
 });
 
 
@@ -41,11 +42,25 @@ function bindUpdDel() {
 }
 
 
-function bindMapButton() {
+function bindMapCalButton() {
   var button = document.getElementById('MapView');
   button.addEventListener('click', function(event) {
     window.location.href = '/mapview';
     event.preventDefault();
   });
 
+  var calButton = document.getElementById('CalendarView'); 
+  calButton.addEventListener('click', function(event) {
+    window.location.href = '/calendarview';
+    event.preventDefault(); 
+  }); 
+
+}
+
+function bindLogoutButton() {
+  var button = document.getElementById('LogOut');
+  button.addEventListener('click', function(event) {
+    window.location.href = '/logOut';
+    event.preventDefault();
+  });
 }

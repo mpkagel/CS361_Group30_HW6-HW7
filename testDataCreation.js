@@ -35,7 +35,7 @@ module.exports.CreateTestData = function() {
   ];
 
   arr.profiles = [
-    new dataDef.Profile("Bob Ross", "aTY*ta", tasks),
+    new dataDef.Profile("Bob Ross", "aTY*ta", tasks, "2736197735", "2200 Goldblum Way", "Roseville", "CA", "190 Barley St", "Roseville", "CA", "rossb@gmail.com"),
    
   ];  
 
