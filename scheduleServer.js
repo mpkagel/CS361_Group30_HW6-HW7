@@ -155,13 +155,12 @@ app.put('/profiles', function(req, res){
 
 
 app.put('/delete/:id', function(req, res){
-
 	id = req.params.id;
 	callbackCount = 0;
 	var context = {};
 	scheduleData.profiles[0].Schedule.tasks.splice(id, 1); 
-	context = scheduleData.profiles[0].Schedule.tasks[id]; 
-	context.id = req.params.id; 
+	context.results = scheduleData.profiles[0].Schedule.tasks[id]; 
+	context.id = req.params.id;
 	res.send(null); 
 });
 
