@@ -1,0 +1,71 @@
+<h3>Adding Task</h3>
+
+<form id=add-task>
+  <fieldset>
+    <table>
+      <thead>
+        <th>Task Name</th>
+        <th>Task Date</th>
+        <th>Task Time</th>
+        <th>Task Address</th>
+        <th>Task City</th>
+        <th>Task State</th>
+        <th>Task Recurring? (1=yes 0=no)</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="text" name="name" id="newName"></td>
+          <td><input type="text" name="date" id="newDate"></td>
+          <td><input type="text" name="time" id="newTime"></td>
+          <td><input type="text" name="address" id="newAddress"></td>
+          <td><input type="text" name="city" id="newCity"></td>
+          <td><input type="text" name="state" id="newState"></td>
+          <td><input type="text" name="recurring" id="newRecurring"></td> 
+        </tr>
+      </tbody>
+    </table>
+    <div></div>
+    <button onclick="addItem()">Add Task</button>
+  </fieldset>
+</form>
+
+<script>
+  function addItem(){
+      $.ajax({
+          url: '/listview',
+          type: 'PUT',
+          data: $('#add-task').serialize(),
+          success: function(result){
+            window.location.href = '/listview';
+          }
+      })}
+</script>
+
+<br>
+<table>
+	<thead>
+		<th>Task Name</th>
+	</thead>
+	<tbody>
+	{{#each results}}
+	<tr> 
+	    <td>{{name}}</td> 
+      <td><button class=TaskModButton> Delete</button></td>
+      <td><button class=TaskModButton> Update</button></td>
+	</tr> 
+	{{/each}}
+	</tbody>
+</table>
+
+<div id="spacer"></div>
+<button onclick="window.location.href='/updateprofile'" id="prof"> Update Profile </button>
+
+<div id="spacer"></div>
+<button type="button" id=MapView> Schedule Map View </button>
+<button type="button" id=CalendarView> Schedule Calendar View </button>
+
+<div id="spacer"></div>
+<button type="button" id=LogOut> Logout </button>
+
+<script src="/scripts/deletetask.js" defer></script>
+		
