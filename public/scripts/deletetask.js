@@ -3,7 +3,7 @@ function deleteTask(id){
         url: '/delete/' + id,
         type: 'PUT',
         success: function(result){
-            window.location.replace("./");
+            window.location.replace("/listview");
         }
     })
 };
