@@ -17,7 +17,7 @@ app.set('view engine', 'handlebars');
 app.set('views', __dirname + '/views');
 app.set('port', 5047);
 app.use(express.static('public'));
-//var credentials = require('./credentials.js');
+var credentials = require('./credentials.js');
 var dataDef = require('./dataDefinition.js');
 var testData = require('./testDataCreation.js')
 
