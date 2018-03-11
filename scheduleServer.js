@@ -59,7 +59,7 @@ app.post('/',function(req,res){
   }
   context.dataList = params;
 
-  if(params[0].name=="username" && params[0].value=="employeeTest"){
+  if(params[0].name=="username" && params[0].value=="userTest"){
     if(params[1].name=="password" && params[1].value=="testpassword"){
       session.loggedIn = 1;
       res.redirect("/add");
