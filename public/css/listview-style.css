@@ -7,3 +7,17 @@
 #spacer {
 	height: 11px;
 }
+
+.addTask {
+    border: none; 
+}
+
+table.displayTasks td, th{
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.displayTasks {
+    border: 1px solid black; 
+    border-collapse: collapse;
+}

@@ -5,44 +5,51 @@
 ** Description: This is the javascript file that ????????????
 *************************************************************/
 var express = require('express');
+var session = require("express-session");
+var fs = require("fs"); //write file
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var bodyParser = require('body-parser');
 var request = require('request');
-var session = require('express-session');
 
 app.engine('handlebars', handlebars.engine);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.set('view engine', 'handlebars');
 app.set('views', __dirname + '/views');
-app.set('port', 5047);
+app.set('port', 61431);
 app.use(express.static('public'));
-app.use(session({
-  secret: 'nosecrets',
-  resave: false,
-  saveUninitialized: true
-}));
-session.loggedIn = 0;
-
 var credentials = require('./credentials.js');
 var dataDef = require('./dataDefinition.js');
-var testData = require('./testDataCreation.js');
+var testData = require('./testDataCreation.js')
 
 // Starting program
 var scheduleData = [];
 
 scheduleData = testData.CreateTestData();
 //testData.PrintTestData(scheduleData);
-
 /* Homepage handling*/
-app.get('/',function(req,res) {
+
+//for login
+
+app.use(session({
+  secret: "thisisapassword1",
+  resave: false,
+  saveUninitialized: false
+          }));;
+session.loggedIn = 0;
+
+const path = require('path');
+
+
+app.get('/',function(req,res){
   var context = {};
   res.render('loginHome', context);
  });
 
+
 //Post login info, if matches test login, redirect to /newQuote
-app.post('/',function(req,res) {
+app.post('/',function(req,res){
   var params = [];
   var context = {};
 
@@ -61,20 +68,23 @@ app.post('/',function(req,res) {
   }
 });
 
-app.get("/logOut", function(req, res) {
+
+app.get("/logOut", function(req, res){
   if (session.loggedIn) {
     session.loggedIn = 0;
   }
   res.redirect("/");
 });
 
+//Add scheduled task
 app.get('/listview', function(req, res, next) {
   	var context = {};
+    //context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
 
     context.results = scheduleData.profiles[0].Schedule.tasks;
     context.layout = 'listLayout';
     res.render('listview', context);
-}); 
+});
 
 app.put('/listview', function(req, res){
   var context = {};
@@ -100,7 +110,8 @@ function GetCoords(res, context, complete) {
 
 	scheduleData.profiles[0].Schedule.tasks.forEach( function(e) {
  		addresses.push(CoordinateFormatAddress(e));
-	});    
+	});
+
 
 	addresses.forEach( function(e, i) {
 	  	request('https://maps.googleapis.com/maps/api/geocode/json?address=' +
@@ -116,43 +127,42 @@ function GetCoords(res, context, complete) {
 	      			console.log(response.statusCode);
 	      		}
 	    	}
-	  	}); 
+	  	});
 	});
 
-	requestCount = 0;
-	function requestComplete() {
-		requestCount++;
-		if (requestCount == addresses.length) {
-			context.lats = lats;
-			context.lngs = lngs;
-			complete();
-		}
-	};
+  	requestCount = 0;
+  	function requestComplete() {
+  		requestCount++;
+  		if (requestCount == addresses.length) {
+  			context.lats = lats;
+  			context.lngs = lngs;
+  			complete();
+  		}
+  	};
 }
 
 app.get('/mapview', function(req, res, next) {
   	var context = {};
-    //context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
 
-	  GetCoords(res, context, complete);
+	GetCoords(res, context, complete);
     context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
 
     function complete() {
       	context.layout = 'mapLayout';
-    	  context.tasks = scheduleData.profiles[0].Schedule.tasks;
+    	context.tasks = scheduleData.profiles[0].Schedule.tasks;
       	res.render('mapview', context);
-    }    
+    }
 
-}); 
+});
 
 app.get('/update/:id', function(req, res){
 	callbackCount = 0;
 	var context = {};
 	context.jsscripts = ["updatetask.js"];
-	id = req.params.id; 
-	context = scheduleData.profiles[0].Schedule.tasks[id]; 
+	id = req.params.id;
+	context = scheduleData.profiles[0].Schedule.tasks[id];
 	context.id = id;
-  context.layout = 'updateTaskLayout'; 
+	context.layout = 'updateTaskLayout';
 	res.render('update-task', context);
 });
 
@@ -166,7 +176,7 @@ app.put('/tasks/:id', function(req, res){
 	scheduleData.profiles[0].Schedule.tasks[id].Location.state = req.body.state;
 
   context.results = scheduleData.profiles[0].Schedule.tasks;
-  res.send(null);	
+  res.send(null);
 });
 
 app.get('/updateprofile', function(req, res){
@@ -175,6 +185,14 @@ app.get('/updateprofile', function(req, res){
         context = scheduleData.profiles[0];
         context.layout = 'updateProfileLayout';
         res.render('update-profile', context);
+});
+
+app.get('/signup', function(req, res){
+        callbackCount = 0;
+        var context = {};
+        context = {};
+        context.layout = 'createProfileLayout';
+        res.render('create-profile', context);
 });
 
 app.put('/profiles', function(req, res){
@@ -192,16 +210,17 @@ app.put('/profiles', function(req, res){
   res.send(null);
 });
 
-app.put('/delete/:id', function(req, res){
 
+app.put('/delete/:id', function(req, res){
 	id = req.params.id;
 	callbackCount = 0;
 	var context = {};
-	scheduleData.profiles[0].Schedule.tasks.splice(id, 1); 
-	context = scheduleData.profiles[0].Schedule.tasks[id]; 
-	context.id = req.params.id; 
-	res.send(null); 
+	scheduleData.profiles[0].Schedule.tasks.splice(id, 1);
+	context.results = scheduleData.profiles[0].Schedule.tasks[id];
+	context.id = req.params.id;
+	res.send(null);
 });
+
 
 app.get('/calendarview', function(req, res){
         callbackCount = 0;
@@ -214,9 +233,10 @@ app.post('/calendarview', function(req, res){
         callbackCount = 0;
         var context = {};
     	context.tasks = scheduleData.profiles[0].Schedule.tasks;
-	context.month = req.body.month; 
-	res.send(context); 
+	context.month = req.body.month;
+	res.send(context);
 });
+
 
 app.use(function(req,res) {
   	res.status(404);
