@@ -17,3 +17,7 @@ table.displayTasks td, th{
     border: 1px solid black; 
     border-collapse: collapse;
 }
+
+#spacer {
+	height: 11px;
+}

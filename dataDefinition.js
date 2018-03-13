@@ -24,6 +24,8 @@ module.exports.Schedule = function( tasks ) {
   this.optimizScore = 0;
   this.owner = 0;
   this.tasks = tasks;
+  this.blackoutStart = null;
+  this.blackoutEnd = null;
 }
 
 module.exports.Task = function( name, date, time, address, city, state, recurring ) {
