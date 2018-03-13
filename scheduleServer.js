@@ -21,15 +21,16 @@ app.set('port', 61431);
 app.use(express.static('public'));
 var credentials = require('./credentials.js');
 var dataDef = require('./dataDefinition.js');
-var testData = require('./testDataCreation.js')
+var testData = require('./testDataCreation.js');
+var mapHelpers = require('./mapHelpers.js');
 
 // Starting program
 var scheduleData = [];
 
 scheduleData = testData.CreateTestData();
 //testData.PrintTestData(scheduleData);
-/* Homepage handling*/
 
+/* Homepage handling*/
 //for login
 
 app.use(session({
@@ -41,12 +42,10 @@ session.loggedIn = 0;
 
 const path = require('path');
 
-
 app.get('/',function(req,res){
   var context = {};
   res.render('loginHome', context);
  });
-
 
 //Post login info, if matches test login, redirect to /newQuote
 app.post('/',function(req,res){
@@ -76,133 +75,123 @@ app.get("/logOut", function(req, res){
   res.redirect("/");
 });
 
+function IsInsideBlackout(date, startDate, endDate) {
+	var date = date.split("-");
+	if (startDate == null || endDate == null) {
+		return 0;
+	}
+    var start = startDate.split("-");
+    var end = endDate.split("-");
+
+    if (Number(date[0]) > Number(start[0]) && Number(date[0]) < Number(end[0])) {
+    	return 1;
+    } else if (Number(date[0]) == Number(start[0]) || Number(date[0]) == Number(end[0])) {
+    	if (Number(date[1]) > Number(start[1]) && Number(date[1]) < Number(end[1])) {
+    		return 1;
+    	} else if (Number(date[1]) == Number(start[1]) && Number(date[1]) < Number(end[1])) {
+    		if (Number(date[2]) > Number(start[2])) {
+    			return 1;
+    		}
+    	} else if (Number(date[1]) > Number(start[1]) && Number(date[1]) == Number(end[1])) {
+    		if (Number(date[2]) < Number(end[2])) {
+    			return 1;
+    		}
+    	} else if (Number(date[1]) == Number(start[1]) && Number(date[1]) == Number(end[1])) {
+    		if (Number(date[2]) > Number(start[2]) && Number(date[2]) < Number(end[2])) {
+    			return 1;
+    		}
+    	}
+    }
+
+    return 0;
+}
+
 //Add scheduled task
 app.get('/listview', function(req, res, next) {
   	var context = {};
-    //context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
 
     context.results = scheduleData.profiles[0].Schedule.tasks;
     context.layout = 'listLayout';
+    if (req.session.listWarning) {
+    	context.warning = req.session.listWarning;
+    	req.session.listWarning = null;
+    } else {
+    	context.warning = null;
+    }
     res.render('listview', context);
 });
 
 app.put('/listview', function(req, res){
   var context = {};
+  var isBlackout = IsInsideBlackout(req.body.date,
+   scheduleData.profiles[0].Schedule.blackoutStart, scheduleData.profiles[0].Schedule.blackoutEnd);
 
+	var date = [];
+
+  if (isBlackout) {
+  	req.session.listWarning = "Task date entered was in the blackout period. Task date has been moved."
+  	var date = scheduleData.profiles[0].Schedule.blackoutEnd.split("-")
+  	date[1] = Number(date[1]) + 1;
+  	if (Number(date[1]) > 12) {
+  		date[1] = "01";
+  		date[0] = Number(date[0]) + 1;
+  	} else {
+  		if (date[1] < 10) {
+  			date[1] = "0" + date[1];
+  		} 
+  	}
+  	req.body.date = date[0] + "-" + date[1] + "-" + date[2];
+  }
+  
   newTask = new dataDef.Task(req.body.name, req.body.date, req.body.time,
       req.body.address, req.body.city, req.body.state, req.body.recurring);   
   scheduleData.profiles[0].Schedule.tasks.push(newTask);
   res.send(null);
 });
 
-function CoordinateFormatAddress(task) {
-	addressUnf = task.Location;
-	addressForm = task.Location.address.split(" ").join("+");
-	addressForm += ",+" + task.Location.city.split(" ").join("+");
-	addressForm += ",+" + task.Location.state.split(" ").join("+");
-	return addressForm;
-}
+function GetCoords(res, context, complete, arr) {
+  var addresses = [];
+  var lats = [];
+  var lngs = [];
 
-function BubbleSortDates(arr) {
-  var i;
-  var j;
-  var date1 = [];
-  var date2 = [];
-  var time1 = [];
-  var time2 = [];
-  var task;
+  arr = mapHelpers.BubbleSortDates(arr);
 
-  for (i = arr.length - 1; i >= 0; i--) {
-    for (j = 1; j <= i; j++) {
-      if (arr[j - 1].date == null || arr[j - 1].time == null) {
-        task = arr[i];
-        arr[i] = arr[j - 1];
-        arr[j - 1] = task;
-        break;
-      }
+  arr.forEach( function(e) {
+    addresses.push(mapHelpers.CoordinateFormatAddress(e));
+  });
 
-      if (arr[j].date == null || arr[j].time == null) {
-        task = arr[i];
-        arr[i] = arr[j];
-        arr[j] = task;
-        break;
-      }
+  addresses.forEach( function(e, i) {
+      request('https://maps.googleapis.com/maps/api/geocode/json?address=' +
+        e + '&key=' + credentials.mapKey, function(err, response, body) {
+        if (!err && response.statusCode < 400) {
+            var bodyParsed = JSON.parse(body);
+            lats[i] = bodyParsed.results[0].geometry.location.lat;
+            lngs[i] = bodyParsed.results[0].geometry.location.lng;
+            requestComplete();
+        } else {
+            console.log(err);
+            if (response) {
+              console.log(response.statusCode);
+            }
+        }
+      });
+  });
 
-      date1 = arr[j - 1].date.split("-");
-      date2 = arr[j].date.split("-");
-      time1 = arr[j - 1].time.split(":");
-      time2 = arr[j].time.split(":");
-
-      if (Number(date1[0]) > Number(date2[0])) {
-        task = arr[j];
-        arr[j] = arr[j - 1];
-        arr[j - 1] = task;
-      } else if (Number(date1[0]) == Number(date2[0]) && Number(date1[1]) > Number(date2[1])) {
-        task = arr[j];
-        arr[j] = arr[j - 1];
-        arr[j - 1] = task;
-      } else if (Number(date1[1]) == Number(date2[1]) && Number(date1[2]) > Number(date2[2])) {
-        task = arr[j];
-        arr[j] = arr[j - 1];
-        arr[j - 1] = task;
-      } else if (Number(date1[2]) == Number(date2[2]) && Number(time1[0]) > Number(time2[0])) {
-        task = arr[j];
-        arr[j] = arr[j - 1];
-        arr[j - 1] = task;
-      } else if (Number(time1[0]) == Number(time2[0]) && Number(time1[1]) > Number(time2[1])) {
-        task = arr[j];
-        arr[j] = arr[j - 1];
-        arr[j - 1] = task;
-      }
+  requestCount = 0;
+  function requestComplete() {
+    requestCount++;
+    if (requestCount == addresses.length) {
+      context.lats = lats;
+      context.lngs = lngs;
+      complete();
     }
-  }
-
-  return arr;
-}
-
-function GetCoords(res, context, complete) {
-	var addresses = [];
-	var lats = [];
-	var lngs = [];
-
-	scheduleData.profiles[0].Schedule.tasks = BubbleSortDates(scheduleData.profiles[0].Schedule.tasks);
-
-	scheduleData.profiles[0].Schedule.tasks.forEach( function(e) {
- 		addresses.push(CoordinateFormatAddress(e));
-	});
-
-	addresses.forEach( function(e, i) {
-	  	request('https://maps.googleapis.com/maps/api/geocode/json?address=' +
-	    	e + '&key=' + credentials.mapKey, function(err, response, body) {
-	    	if (!err && response.statusCode < 400) {
-	      		var bodyParsed = JSON.parse(body);
-	      		lats[i] = bodyParsed.results[0].geometry.location.lat;
-	      		lngs[i] = bodyParsed.results[0].geometry.location.lng;
-	      		requestComplete();
-	    	} else {
-	      		console.log(err);
-	      		if (response) {
-	      			console.log(response.statusCode);
-	      		}
-	    	}
-	  	});
-	});
-
-  	requestCount = 0;
-  	function requestComplete() {
-  		requestCount++;
-  		if (requestCount == addresses.length) {
-  			context.lats = lats;
-  			context.lngs = lngs;
-  			complete();
-  		}
-  	};
+  };
 }
 
 app.get('/mapview', function(req, res, next) {
   	var context = {};
 
-	GetCoords(res, context, complete);
+	GetCoords(res, context, complete, scheduleData.profiles[0].Schedule.tasks);
     context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
 
     function complete() {
@@ -226,6 +215,24 @@ app.get('/update/:id', function(req, res){
 
 app.put('/tasks/:id', function(req, res){
 	var context = {};
+
+	var isBlackout = IsInsideBlackout(req.body.olddate,
+   scheduleData.profiles[0].Schedule.blackoutStart, scheduleData.profiles[0].Schedule.blackoutEnd);
+
+	if (isBlackout) {
+		isBlackout = 0;
+	} else {
+		isBlackout = IsInsideBlackout(req.body.date,
+   		 scheduleData.profiles[0].Schedule.blackoutStart, scheduleData.profiles[0].Schedule.blackoutEnd);
+	}
+
+	var date = [];
+
+  if (isBlackout) {
+  	req.session.listWarning = "Updated task date entered was in the blackout period. Task date has not changed."
+  	req.body.date = req.body.olddate;
+  }
+
 	scheduleData.profiles[0].Schedule.tasks[id].name = req.body.name;
 	scheduleData.profiles[0].Schedule.tasks[id].date = req.body.date;
 	scheduleData.profiles[0].Schedule.tasks[id].time = req.body.time;
@@ -305,7 +312,6 @@ app.put('/add-blackout', function(req, res){
   var context = {};
   scheduleData.profiles[0].Schedule.blackoutStart = req.body.startdate;
   scheduleData.profiles[0].Schedule.blackoutEnd = req.body.enddate;
-  console.log(scheduleData.profiles[0].Schedule);
   res.send(null);
 });
 
