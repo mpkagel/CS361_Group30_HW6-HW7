@@ -18,7 +18,7 @@ function createProfile(){
     $.ajax({
         url: '/profiles',
         type: 'PUT',
-        data: $('#create-profile').serialize(),
+        data: $('#update-profile').serialize(),
         success: function(result){
 		window.location.href = '/';
         }
