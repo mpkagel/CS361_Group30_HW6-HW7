@@ -1,5 +1,7 @@
 <h3>Adding Task</h3>
-
+{{#if warning}}
+  <h3 class="warning" id="warning">{{warning}}</h3>
+{{/if}}
 <form id=add-task>
   <fieldset>
     <table>

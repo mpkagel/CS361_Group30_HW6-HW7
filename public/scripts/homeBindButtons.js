@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	bindUpdDel();  
 	bindMapCalButton();
 	bindLogoutButton();
+	warningTimer();
 });
 
 
@@ -63,4 +64,14 @@ function bindLogoutButton() {
     window.location.href = '/logOut';
     event.preventDefault();
   });
+}
+
+function warningTimer() { // Warning only remains for specified time.
+  setTimeout( function() {
+    var header = document.getElementById('warning');
+    if (header) {
+       var parent = header.parentNode;
+       parent.removeChild(header);
+    }
+  }, 4500);
 }
