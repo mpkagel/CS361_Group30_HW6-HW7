@@ -6,6 +6,7 @@ function initMap() {
 	var lats = [];
 	var lngs = [];
 	var taskNames = [];
+	var recurring = [];
 
   	{{#each lats}}
   		lats[{{@index}}] = {{this}};
@@ -15,6 +16,9 @@ function initMap() {
 	{{/each}}
 	{{#each tasks}}
 		taskNames[{{@index}}] = "{{name}}"
+	{{/each}}
+	{{#each tasks}}
+		recurring[{{@index}}] = "{{recurring}}"
 	{{/each}}	
 
 	var uluru = {lat: lats[0], lng: lngs[0]};
@@ -28,14 +32,19 @@ function initMap() {
 	document.head.appendChild(imported);
 
 	imported.onload = function() {
-		var i, marker;
+		var i, marker, index;
 		for (i = 0; i < lats.length; i++) {
+			if (recurring[i] == 0) {
+				index = i + 1;
+			} else {
+				index = "R";
+			}
 			var marker = new MarkerWithLabel({
 		    	position: {lat: lats[i], lng: lngs[i]},
 		    	map: map,
 		    	icon: '/icons/blue-dot.png',
-		    	title: taskNames[i],
-		    	labelContent: taskNames[i],
+		    	title: index + ": " + taskNames[i],
+		    	labelContent: index + ": " + taskNames[i],
 		    	labelClass: 'my-custom-class-for-label'	
 		    	
 			});
@@ -50,9 +59,3 @@ function initMap() {
 <script async defer
 src="{{maprequest}}">
 </script>
-
-
-
-
-
-
