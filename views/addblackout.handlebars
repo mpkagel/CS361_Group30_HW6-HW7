@@ -1,0 +1,36 @@
+<h3>Setting Blackout Period</h3>
+
+<form id=add-blackout>
+  <fieldset>
+    <table>
+      <thead>
+        <th>Start Date</th>
+        <th>End Date</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="text" name="startdate" id="newStartDate"></td>
+          <td><input type="text" name="enddate" id="newEndDate"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div></div>
+    <button onclick="addItem()">Set Blackout Period</button>
+  </fieldset>
+</form>
+
+<script>
+  function addItem(){
+      $.ajax({
+          url: '/add-blackout',
+          type: 'PUT',
+          data: $('#add-blackout').serialize(),
+          success: function(result){
+            window.location.href = '/listview';
+          }
+      })}
+</script>
+
+<div id="spacer"></div>
+<button onclick="window.location.href='/listview'" id="prof"> List View </button>
+

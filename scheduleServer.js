@@ -103,7 +103,6 @@ function CoordinateFormatAddress(task) {
 	return addressForm;
 }
 
-
 function BubbleSortDates(arr) {
   var i;
   var j;
@@ -296,6 +295,19 @@ app.post('/calendarview', function(req, res){
 	res.send(context);
 });
 
+app.get('/add-blackout', function(req, res){
+        var context = {};
+        context.layout = 'addBlackoutLayout';
+        res.render('addblackout', context);
+});
+
+app.put('/add-blackout', function(req, res){
+  var context = {};
+  scheduleData.profiles[0].Schedule.blackoutStart = req.body.startdate;
+  scheduleData.profiles[0].Schedule.blackoutEnd = req.body.enddate;
+  console.log(scheduleData.profiles[0].Schedule);
+  res.send(null);
+});
 
 app.use(function(req,res) {
   	res.status(404);
