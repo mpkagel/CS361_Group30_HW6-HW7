@@ -1,0 +1,35 @@
+<h3>Clear calendar dates</h3>
+
+<form id=clear-calendar>
+  <fieldset>
+    <table>
+      <thead>
+        <th>Start Date</th>
+        <th>End Date</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="date" name="clearStart" id="clearStart"></td>
+          <td><input type="date" name="clearEnd" id="clearEnd"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div></div>
+    <button onclick="clearCalendar()">Clear dates</button>
+  </fieldset>
+</form>
+
+<script>
+  function clearCalendar(){
+      $.ajax({
+          url: '/clear-calendar',
+          type: 'PUT',
+          data: $('#clear-calendar').serialize(),
+          success: function(result){
+            window.location.href = '/listview';
+          }
+      })}
+</script>
+
+<div id="spacer"></div>
+<button onclick="window.location.href='/listview'" id="prof"> List View </button>
