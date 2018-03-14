@@ -323,6 +323,37 @@ app.put('/add-blackout', function(req, res){
   res.send(null);
 });
 
+
+app.get('/clear-calendar', function(req, res){
+        var context = {};
+        context.layout = 'clearCalendarLayout';
+        res.render('clearcalendar', context);
+});
+
+app.put('/clear-calendar', function(req, res){
+	var context = {};
+        var start = req.body.clearStart; 
+	var end = req.body.clearEnd;
+	var length = scheduleData.profiles[0].Schedule.tasks.length; 
+
+	var i = 0; 
+
+	while (i < length) {
+		var task = scheduleData.profiles[0].Schedule.tasks[i];
+		var date = task.date;		
+		if (date != null) {
+			if (start == date || end == date || (start <= date && end >= date)) {
+				scheduleData.profiles[0].Schedule.tasks.splice(i, 1);
+				i = i - 1; 
+				length = length - 1; 
+			}
+		}
+		i = i + 1; 
+	}
+  
+	res.send(null);
+});
+
 app.use(function(req,res) {
   	res.status(404);
   	res.render('404');
