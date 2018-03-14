@@ -275,6 +275,14 @@ app.put('/profiles', function(req, res){
   res.send(null);
 });
 
+app.put('/new-password', function(req, res){
+        var context = {};
+        scheduleData.profiles[0].pword = req.body.pword;
+  context.results = scheduleData.profiles[0];
+  res.send(null);
+});
+
+
 
 app.put('/delete/:id', function(req, res){
 	id = req.params.id;
