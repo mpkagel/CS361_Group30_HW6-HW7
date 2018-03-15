@@ -8,6 +8,8 @@ function initMap() {
 	var taskNames = [];
 	var recurring = [];
 
+	// Populate array with necessary data that is passed in
+	// by handlebars
   	{{#each lats}}
   		lats[{{@index}}] = {{this}};
 	{{/each}}
@@ -21,16 +23,26 @@ function initMap() {
 		recurring[{{@index}}] = "{{recurring}}"
 	{{/each}}	
 
+    // The majority of the code below was adapted from:
+    // https://developers.google.com/maps/documentation/javascript/adding-a-google-map
+	// Give the map a center location
 	var uluru = {lat: lats[0], lng: lngs[0]};
 	var map = new google.maps.Map(document.getElementById('map'), {
 	    zoom: 11,
 	    center: uluru
 	});
 	
+	// Run the marker with label code
+	// Marker with label instructions came from: https://medium.com/@barvysta/
+	// google-marker-api-lets-play-level-1-dynamic-label-on-marker-f9b94f2e3585
+	// The marker with label JavaScript code was written by Gary Little, and can be found
+	// at cdn.sobekrepository.org/includes/gmaps-markerwithlabel.html
 	var imported = document.createElement('script');
 	imported.src = '/scripts/gmaps-markerwithlabel-1.9.1.js'
 	document.head.appendChild(imported);
 
+    // Once the marker with label code has run, the markers can be created and added
+    // to the map with information from the arrays above
 	imported.onload = function() {
 		var i, marker, index;
 		for (i = 0; i < lats.length; i++) {
@@ -46,7 +58,6 @@ function initMap() {
 		    	title: index + ": " + taskNames[i],
 		    	labelContent: index + ": " + taskNames[i],
 		    	labelClass: 'my-custom-class-for-label'	
-		    	
 			});
 		}
 	}
@@ -56,6 +67,7 @@ function initMap() {
 <div id="spacer"></div>
 <button onclick="window.location.href='/listview'" id="prof"> List View </button>
 
+<!-- The below call is what initialized the google map and actually makes the map a map -->
 <script async defer
 src="{{maprequest}}">
 </script>

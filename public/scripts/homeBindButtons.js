@@ -5,8 +5,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	warningTimer();
 });
 
-
-
 function bindUpdDel() {
 	var buttons = document.getElementsByClassName('TaskModButton');
 
@@ -38,10 +36,7 @@ function bindUpdDel() {
 		})(i); 
 		i = i + 1; 
 	}
-
-
 }
-
 
 function bindMapCalButton() {
   var button = document.getElementById('MapView');
@@ -55,7 +50,6 @@ function bindMapCalButton() {
     window.location.href = '/calendarview';
     event.preventDefault(); 
   }); 
-
 }
 
 function bindLogoutButton() {
