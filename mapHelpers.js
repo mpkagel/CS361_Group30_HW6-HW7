@@ -36,23 +36,23 @@ module.exports.BubbleSortDates = function(arr) {
       time1 = arr[j - 1].time.split(":");
       time2 = arr[j].time.split(":");
 
-      if (Number(date1[0]) > Number(date2[0])) {
+      if (Number(date1[0]) > Number(date2[0])) { // year
         task = arr[j];
         arr[j] = arr[j - 1];
         arr[j - 1] = task;
-      } else if (Number(date1[0]) == Number(date2[0]) && Number(date1[1]) > Number(date2[1])) {
+      } else if (Number(date1[0]) == Number(date2[0]) && Number(date1[1]) > Number(date2[1])) { // month
         task = arr[j];
         arr[j] = arr[j - 1];
         arr[j - 1] = task;
-      } else if (Number(date1[1]) == Number(date2[1]) && Number(date1[2]) > Number(date2[2])) {
+      } else if (Number(date1[1]) == Number(date2[1]) && Number(date1[2]) > Number(date2[2])) { // day
         task = arr[j];
         arr[j] = arr[j - 1];
         arr[j - 1] = task;
-      } else if (Number(date1[2]) == Number(date2[2]) && Number(time1[0]) > Number(time2[0])) {
+      } else if (Number(date1[2]) == Number(date2[2]) && Number(time1[0]) > Number(time2[0])) { // hour
         task = arr[j];
         arr[j] = arr[j - 1];
         arr[j - 1] = task;
-      } else if (Number(time1[0]) == Number(time2[0]) && Number(time1[1]) > Number(time2[1])) {
+      } else if (Number(time1[0]) == Number(time2[0]) && Number(time1[1]) > Number(time2[1])) { // min
         task = arr[j];
         arr[j] = arr[j - 1];
         arr[j - 1] = task;
