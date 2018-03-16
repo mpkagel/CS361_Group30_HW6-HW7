@@ -1,6 +1,6 @@
 module.exports.CreateTestData = function() {
   var dataDef = require('./dataDefinition.js')
-  
+
   var arr = [];
 
   tasks = [
@@ -35,11 +35,11 @@ module.exports.CreateTestData = function() {
   ];
 
   arr.profiles = [
-    new dataDef.Profile("Bob Ross", "aTY*ta", tasks, "2736197735", "2200 Goldblum Way", "Roseville", "CA", "190 Barley St", "Roseville", "CA", "rossb@gmail.com"),
-   
-  ];  
+    new dataDef.Profile("Bob Ross", "aTY*ta", tasks, "2736197735", "2200 Goldblum Way", "Roseville", "CA", "190 Barley St", "Roseville", "CA", "rossb@gmail.com")
 
-  
+  ];
+
+
   return arr;
 }
 
@@ -51,8 +51,7 @@ module.exports.PrintTestData = function(arr) {
     console.log(e.Schedule);
     e.Schedule.tasks.forEach( function(e) {
       console.log(e);
-    });  
+    });
   });
 
 }
-

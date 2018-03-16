@@ -1,5 +1,5 @@
 <h1>Create a Profile:</h1>
-<form id="create-profile">
+<form id="create-profile" action='/signup' method='post'>
     Name: <input type="text" name="name" ><br>
     Phone number: <input type="text" name="phone"><br>
     Home address: <input type="text" name="addressH" ><br>
@@ -8,20 +8,20 @@
     Work address: <input type="text" name="addressW" ><br>
     Work state: <input type="text" name="stateW" ><br>
     Work city: <input type="text" name="cityW" ><br>
-    Email: <input type="text" name="email" ><br>
-    Password: <input type="text" name="pword"><br>
-
+    Email: <input type="text" maxlength="30" name="email" ><br>
+    Password: <input type="text" maxlength="15" name="pword"><br>
+    <input type="submit" value="Let's do this!">
 </form>
-<button onclick="createProfile()">Let's do this!</button>
+<!-- <button onclick="createProfile()">Let's do this!</button> -->
 
-<script>
+<!-- <script>
 function createProfile(){
     $.ajax({
-        url: '/profiles',
+        url: '/signup',
         type: 'PUT',
         data: $('#create-profile').serialize(),
         success: function(result){
-		window.location.href = '/';
+		        render('/', {})
         }
     })}
-</script>
+</script> -->

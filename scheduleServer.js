@@ -31,7 +31,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false
           }));;
-session.loggedIn = 0;
+session.loggedIn = -1;
 
 const path = require('path');
 
@@ -39,7 +39,10 @@ const path = require('path');
 var scheduleData = [];
 
 scheduleData = testData.CreateTestData();
+var accountsCount = 1; //test creates one profile accessed at 0
 //testData.PrintTestData(scheduleData);
+
+
 
 function IsInsideBlackout(date, startDate, endDate) {
   var date = date.split("-");
@@ -114,6 +117,7 @@ function GetCoords(res, context, complete, arr) {
 /* Homepage handling*/
 //for login
 app.get('/',function(req,res){
+  session.loggedIn = -1; //log out anyone who was previously logged in
   var context = {};
   res.render('loginHome', context);
  });
@@ -127,20 +131,24 @@ app.post('/',function(req,res){
     params.push({'name':p,'value':req.body[p]})
   }
   context.dataList = params;
-
-  if(params[0].name=="username" && params[0].value=="employeeTest"){
-    if(params[1].name=="password" && params[1].value=="testpassword"){
-      session.loggedIn = 1;
+  for (var i = 0; i < accountsCount; i++) {
+    if (params[0].value===scheduleData.profiles[i].email && params[1].value===scheduleData.profiles[i].pword) {
+      session.loggedIn = i;
+      console.log("got here");
       res.redirect("/listview");
+      return;
     }
-  } else {
-    res.render('loginError', context); //render error page if unsuccessful login
+    else {
+      console.log('trying next');
+    }
   }
+  // did not find a match
+  res.render('loginError', context); //render error page if unsuccessful login
 });
 
 app.get("/logOut", function(req, res){
   if (session.loggedIn) {
-    session.loggedIn = 0;
+    session.loggedIn = -1;
   }
   res.redirect("/");
 });
@@ -149,7 +157,7 @@ app.get("/logOut", function(req, res){
 app.get('/listview', function(req, res, next) {
   	var context = {};
 
-    context.results = scheduleData.profiles[0].Schedule.tasks;
+    context.results = scheduleData.profiles[session.loggedIn].Schedule.tasks;
     context.layout = 'listLayout';
     if (req.session.listWarning) {
     	context.warning = req.session.listWarning;
@@ -163,13 +171,13 @@ app.get('/listview', function(req, res, next) {
 app.put('/listview', function(req, res){
   var context = {};
   var isBlackout = IsInsideBlackout(req.body.date,
-   scheduleData.profiles[0].Schedule.blackoutStart, scheduleData.profiles[0].Schedule.blackoutEnd);
+   scheduleData.profiles[session.loggedIn].Schedule.blackoutStart, scheduleData.profiles[session.loggedIn].Schedule.blackoutEnd);
 
 	var date = [];
 
   if (isBlackout) {
   	req.session.listWarning = "Task date entered was in the blackout period. Task date has been moved."
-  	var date = scheduleData.profiles[0].Schedule.blackoutEnd.split("-")
+  	var date = scheduleData.profiles[session.loggedIn].Schedule.blackoutEnd.split("-")
   	date[1] = Number(date[1]) + 1;
   	if (Number(date[1]) > 12) {
   		date[1] = "01";
@@ -184,19 +192,19 @@ app.put('/listview', function(req, res){
 
   newTask = new dataDef.Task(req.body.name, req.body.date, req.body.time,
       req.body.address, req.body.city, req.body.state, req.body.recurring);
-  scheduleData.profiles[0].Schedule.tasks.push(newTask);
+  scheduleData.profiles[session.loggedIn].Schedule.tasks.push(newTask);
   res.send(null);
 });
 
 app.get('/mapview', function(req, res, next) {
   	var context = {};
 
-	  GetCoords(res, context, complete, scheduleData.profiles[0].Schedule.tasks);
+	  GetCoords(res, context, complete, scheduleData.profiles[session.loggedIn].Schedule.tasks);
     context.maprequest = "https://maps.googleapis.com/maps/api/js?&key=" + credentials.mapKey + "&callback=initMap";
 
     function complete() {
       	context.layout = 'mapLayout';
-    	context.tasks = scheduleData.profiles[0].Schedule.tasks;
+    	context.tasks = scheduleData.profiles[session.loggedIn].Schedule.tasks;
       	res.render('mapview', context);
     }
 
@@ -207,7 +215,7 @@ app.get('/update/:id', function(req, res){
 	var context = {};
 	context.jsscripts = ["updatetask.js"];
 	id = req.params.id;
-	context = scheduleData.profiles[0].Schedule.tasks[id];
+	context = scheduleData.profiles[session.loggedIn].Schedule.tasks[id];
 	context.id = id;
 	context.layout = 'updateTaskLayout';
 	res.render('update-task', context);
@@ -217,13 +225,13 @@ app.put('/tasks/:id', function(req, res){
 	var context = {};
 
 	var isBlackout = IsInsideBlackout(req.body.olddate,
-   scheduleData.profiles[0].Schedule.blackoutStart, scheduleData.profiles[0].Schedule.blackoutEnd);
+   scheduleData.profiles[session.loggedIn].Schedule.blackoutStart, scheduleData.profiles[session.loggedIn].Schedule.blackoutEnd);
 
 	if (isBlackout) {
 		isBlackout = 0;
 	} else {
 		isBlackout = IsInsideBlackout(req.body.date,
-   		 scheduleData.profiles[0].Schedule.blackoutStart, scheduleData.profiles[0].Schedule.blackoutEnd);
+   		 scheduleData.profiles[session.loggedIn].Schedule.blackoutStart, scheduleData.profiles[session.loggedIn].Schedule.blackoutEnd);
 	}
 
 	var date = [];
@@ -233,38 +241,38 @@ app.put('/tasks/:id', function(req, res){
   	req.body.date = req.body.olddate;
   }
 
-	scheduleData.profiles[0].Schedule.tasks[id].name = req.body.name;
-	scheduleData.profiles[0].Schedule.tasks[id].date = req.body.date;
-	scheduleData.profiles[0].Schedule.tasks[id].time = req.body.time;
-	scheduleData.profiles[0].Schedule.tasks[id].Location.address = req.body.address;
-	scheduleData.profiles[0].Schedule.tasks[id].Location.city = req.body.city;
-	scheduleData.profiles[0].Schedule.tasks[id].Location.state = req.body.state;
+	scheduleData.profiles[session.loggedIn].Schedule.tasks[id].name = req.body.name;
+	scheduleData.profiles[session.loggedIn].Schedule.tasks[id].date = req.body.date;
+	scheduleData.profiles[session.loggedIn].Schedule.tasks[id].time = req.body.time;
+	scheduleData.profiles[session.loggedIn].Schedule.tasks[id].Location.address = req.body.address;
+	scheduleData.profiles[session.loggedIn].Schedule.tasks[id].Location.city = req.body.city;
+	scheduleData.profiles[session.loggedIn].Schedule.tasks[id].Location.state = req.body.state;
 
-  context.results = scheduleData.profiles[0].Schedule.tasks;
+  context.results = scheduleData.profiles[session.loggedIn].Schedule.tasks;
   res.send(null);
 });
 
 app.get('/updateprofile', function(req, res){
         callbackCount = 0;
         var context = {};
-        context = scheduleData.profiles[0];
+        context = scheduleData.profiles[session.loggedIn];
         context.layout = 'updateProfileLayout';
         res.render('update-profile', context);
 });
 
 app.put('/updateprofile', function(req, res) {
   var context = {};
-  scheduleData.profiles[0].name = req.body.name;
-  scheduleData.profiles[0].pword = req.body.pword;
-  scheduleData.profiles[0].phoneNum = req.body.phone;
-  scheduleData.profiles[0].homeLocation.address = req.body.addressH;
-  scheduleData.profiles[0].homeLocation.city = req.body.cityH;
-  scheduleData.profiles[0].homeLocation.state = req.body.stateH;
-  scheduleData.profiles[0].workLocation.address = req.body.addressW;
-  scheduleData.profiles[0].workLocation.city = req.body.cityW;
-  scheduleData.profiles[0].workLocation.state = req.body.stateW;
-  scheduleData.profiles[0].email = req.body.email;
-  context.results = scheduleData.profiles[0];
+  scheduleData.profiles[session.loggedIn].name = req.body.name;
+  scheduleData.profiles[session.loggedIn].pword = req.body.pword;
+  scheduleData.profiles[session.loggedIn].phoneNum = req.body.phone;
+  scheduleData.profiles[session.loggedIn].homeLocation.address = req.body.addressH;
+  scheduleData.profiles[session.loggedIn].homeLocation.city = req.body.cityH;
+  scheduleData.profiles[session.loggedIn].homeLocation.state = req.body.stateH;
+  scheduleData.profiles[session.loggedIn].workLocation.address = req.body.addressW;
+  scheduleData.profiles[session.loggedIn].workLocation.city = req.body.cityW;
+  scheduleData.profiles[session.loggedIn].workLocation.state = req.body.stateW;
+  scheduleData.profiles[session.loggedIn].email = req.body.email;
+  context.results = scheduleData.profiles[session.loggedIn];
   res.send(null);
 });
 
@@ -276,26 +284,36 @@ app.get('/signup', function(req, res){
         res.render('create-profile', context);
 });
 
+app.post('/signup', function (req, res) {
+  console.log(req.body);
+  var tasks = [];
+  scheduleData.profiles.push( new dataDef.Profile(req.body.name, req.body.pword, tasks, req.body.phone, req.body.addressH,
+    req.body.cityH, req.body.stateH, req.body.addressW, req.body.cityW, req.body.stateW, req.body.email) );
+  console.log(scheduleData);
+  accountsCount++;
+  res.redirect('/');
+});
+
 app.put('/profiles', function(req, res){
         var context = {};
-        scheduleData.profiles[0].name = req.body.name;
-        scheduleData.profiles[0].pword = req.body.pword;
-        scheduleData.profiles[0].phoneNum = req.body.phone;
-        scheduleData.profiles[0].homeLocation.address = req.body.addressH;
-        scheduleData.profiles[0].homeLocation.city = req.body.cityH;
-        scheduleData.profiles[0].homeLocation.state = req.body.stateH;
-        scheduleData.profiles[0].workLocation.address = req.body.addressW;
-        scheduleData.profiles[0].workLocation.city = req.body.cityW;
-        scheduleData.profiles[0].workLocation.state = req.body.stateW;
-        scheduleData.profiles[0].email = req.body.email;
-  context.results = scheduleData.profiles[0];
+        scheduleData.profiles[session.loggedIn].name = req.body.name;
+        scheduleData.profiles[session.loggedIn].pword = req.body.pword;
+        scheduleData.profiles[session.loggedIn].phoneNum = req.body.phone;
+        scheduleData.profiles[session.loggedIn].homeLocation.address = req.body.addressH;
+        scheduleData.profiles[session.loggedIn].homeLocation.city = req.body.cityH;
+        scheduleData.profiles[session.loggedIn].homeLocation.state = req.body.stateH;
+        scheduleData.profiles[session.loggedIn].workLocation.address = req.body.addressW;
+        scheduleData.profiles[session.loggedIn].workLocation.city = req.body.cityW;
+        scheduleData.profiles[session.loggedIn].workLocation.state = req.body.stateW;
+        scheduleData.profiles[session.loggedIn].email = req.body.email;
+  context.results = scheduleData.profiles[session.loggedIn];
   res.send(null);
 });
 
 app.put('/new-password', function(req, res){
         var context = {};
-        scheduleData.profiles[0].pword = req.body.pword;
-  context.results = scheduleData.profiles[0];
+        scheduleData.profiles[session.loggedIn].pword = req.body.pword;
+  context.results = scheduleData.profiles[session.loggedIn];
   res.send(null);
 });
 
@@ -303,8 +321,8 @@ app.put('/delete/:id', function(req, res){
 	id = req.params.id;
 	callbackCount = 0;
 	var context = {};
-	scheduleData.profiles[0].Schedule.tasks.splice(id, 1);
-	context.results = scheduleData.profiles[0].Schedule.tasks[id];
+	scheduleData.profiles[session.loggedIn].Schedule.tasks.splice(id, 1);
+	context.results = scheduleData.profiles[session.loggedIn].Schedule.tasks[id];
 	context.id = req.params.id;
 	res.send(null);
 });
@@ -312,14 +330,14 @@ app.put('/delete/:id', function(req, res){
 app.get('/calendarview', function(req, res){
         callbackCount = 0;
         var context = {};
-        context = scheduleData.profiles[0]
+        context = scheduleData.profiles[session.loggedIn]
         res.render('calendarview', context);
 });
 
 app.post('/calendarview', function(req, res){
         callbackCount = 0;
         var context = {};
-    	context.tasks = scheduleData.profiles[0].Schedule.tasks;
+    	context.tasks = scheduleData.profiles[session.loggedIn].Schedule.tasks;
 	context.month = req.body.month;
 	res.send(context);
 });
@@ -332,8 +350,8 @@ app.get('/add-blackout', function(req, res){
 
 app.put('/add-blackout', function(req, res){
   var context = {};
-  scheduleData.profiles[0].Schedule.blackoutStart = req.body.startdate;
-  scheduleData.profiles[0].Schedule.blackoutEnd = req.body.enddate;
+  scheduleData.profiles[session.loggedIn].Schedule.blackoutStart = req.body.startdate;
+  scheduleData.profiles[session.loggedIn].Schedule.blackoutEnd = req.body.enddate;
   res.send(null);
 });
 
@@ -345,18 +363,21 @@ app.get('/clear-calendar', function(req, res){
 
 app.put('/clear-calendar', function(req, res){
 	var context = {};
-        var start = req.body.clearStart;
+  var start = req.body.clearStart;
 	var end = req.body.clearEnd;
-	var length = scheduleData.profiles[0].Schedule.tasks.length;
+	var length = scheduleData.profiles[session.loggedIn].Schedule.tasks.length;
 
 	var i = 0;
 
 	while (i < length) {
-		var task = scheduleData.profiles[0].Schedule.tasks[i];
+		var task = scheduleData.profiles[session.loggedIn].Schedule.tasks[i];
 		var date = task.date;
+    // console.log("Task date");
+    // console.log(date);
+    // console.log(start);
 		if (date != null) {
 			if (start == date || end == date || (start <= date && end >= date)) {
-				scheduleData.profiles[0].Schedule.tasks.splice(i, 1);
+				scheduleData.profiles[session.loggedIn].Schedule.tasks.splice(i, 1);
 				i = i - 1;
 				length = length - 1;
 			}
