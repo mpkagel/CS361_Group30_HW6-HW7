@@ -177,13 +177,13 @@ app.put('/listview', function(req, res){
   	} else {
   		if (date[1] < 10) {
   			date[1] = "0" + date[1];
-  		} 
+  		}
   	}
   	req.body.date = date[0] + "-" + date[1] + "-" + date[2];
   }
-  
+
   newTask = new dataDef.Task(req.body.name, req.body.date, req.body.time,
-      req.body.address, req.body.city, req.body.state, req.body.recurring);   
+      req.body.address, req.body.city, req.body.state, req.body.recurring);
   scheduleData.profiles[0].Schedule.tasks.push(newTask);
   res.send(null);
 });
@@ -252,6 +252,22 @@ app.get('/updateprofile', function(req, res){
         res.render('update-profile', context);
 });
 
+app.put('/updateprofile', function(req, res) {
+  var context = {};
+  scheduleData.profiles[0].name = req.body.name;
+  scheduleData.profiles[0].pword = req.body.pword;
+  scheduleData.profiles[0].phoneNum = req.body.phone;
+  scheduleData.profiles[0].homeLocation.address = req.body.addressH;
+  scheduleData.profiles[0].homeLocation.city = req.body.cityH;
+  scheduleData.profiles[0].homeLocation.state = req.body.stateH;
+  scheduleData.profiles[0].workLocation.address = req.body.addressW;
+  scheduleData.profiles[0].workLocation.city = req.body.cityW;
+  scheduleData.profiles[0].workLocation.state = req.body.stateW;
+  scheduleData.profiles[0].email = req.body.email;
+  context.results = scheduleData.profiles[0];
+  res.send(null);
+});
+
 app.get('/signup', function(req, res){
         callbackCount = 0;
         var context = {};
@@ -263,6 +279,7 @@ app.get('/signup', function(req, res){
 app.put('/profiles', function(req, res){
         var context = {};
         scheduleData.profiles[0].name = req.body.name;
+        scheduleData.profiles[0].pword = req.body.pword;
         scheduleData.profiles[0].phoneNum = req.body.phone;
         scheduleData.profiles[0].homeLocation.address = req.body.addressH;
         scheduleData.profiles[0].homeLocation.city = req.body.cityH;
@@ -328,25 +345,25 @@ app.get('/clear-calendar', function(req, res){
 
 app.put('/clear-calendar', function(req, res){
 	var context = {};
-        var start = req.body.clearStart; 
+        var start = req.body.clearStart;
 	var end = req.body.clearEnd;
-	var length = scheduleData.profiles[0].Schedule.tasks.length; 
+	var length = scheduleData.profiles[0].Schedule.tasks.length;
 
-	var i = 0; 
+	var i = 0;
 
 	while (i < length) {
 		var task = scheduleData.profiles[0].Schedule.tasks[i];
-		var date = task.date;		
+		var date = task.date;
 		if (date != null) {
 			if (start == date || end == date || (start <= date && end >= date)) {
 				scheduleData.profiles[0].Schedule.tasks.splice(i, 1);
-				i = i - 1; 
-				length = length - 1; 
+				i = i - 1;
+				length = length - 1;
 			}
 		}
-		i = i + 1; 
+		i = i + 1;
 	}
-  
+
 	res.send(null);
 });
 
